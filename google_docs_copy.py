@@ -1,16 +1,16 @@
 import time
+
 import pyperclip
-from playwright.sync_api import sync_playwright, Playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Playwright, TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 def copy_google_doc_content(playwright: Playwright):
     document_url = "https://docs.google.com/document/d/10whwZzYqdhE0hJadehajaJGypAdr0ulKG0Pzm7FPuC0/edit?usp=sharing"
 
     chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    # ----------------
 
     browser = playwright.chromium.launch(
         executable_path=chrome_path,
-        headless=True
+        headless=False
     )
     context = browser.new_context(
         locale="ja-JP",
@@ -31,20 +31,20 @@ def copy_google_doc_content(playwright: Playwright):
 
         print("すべてのコンテンツを選択しています (Ctrl+A)...")
         page.keyboard.press("Control+A")
-        time.sleep(1)  # 選択が反映されるのを待機
+        time.sleep(0.5)  # 選択が反映されるのを待機
 
-        print("選択範囲のテキストを取得しています...")
-        selected_text = page.evaluate("() => window.getSelection().toString()")
+        print("クリップボードにコピーしています (Ctrl+C)...")
+        # クリップボードをクリアしてからコピー
+        pyperclip.copy("")
+        page.keyboard.press("Control+C")
+        time.sleep(0.5)  # コピーが完了するのを待機
 
-        if selected_text:
-            print("クリップボードにテキストをコピーしています...")
-            pyperclip.copy(selected_text)
+        selected_text = pyperclip.paste()
 
-            # 完了メッセージを表示
+        if selected_text and selected_text.strip():
             print("\n--------------------")
             print("コピーしました")
             print("--------------------")
-            time.sleep(2)  # 2秒間待機
         else:
             print("エラー: テキストの取得に失敗しました。ドキュメントが空か、選択がうまくいかなかった可能性があります。")
 
